@@ -18,21 +18,30 @@ const ChatHistoryHeader = () => {
                 <button
                     type="button"
                 >
-                    <i className="fa-regular fa-comment"></i>
+                    <i className="fa-regular fa-comment-plus"></i>
                 </button>
             </div>
         </div>
     );
 };
 
-const ChatFolder = ({ folder }) => {
+const Folder = ({ folder, state, onDropChat }) => {
     const [isOpen, setIsOpen] = useState(true);
-    const [selectedChat, setSelectedChat] = useState(null);
+    const dragOver = (e) => {
+        e.preventDefault();
+    };
+
     return (
-        <div className="items-center my-3">
+        <div
+            className="items-center my-3"
+            onDragOver={dragOver}
+            onDrop={(e) => {
+                onDropChat(e, folder.id);
+            }}
+        >
             <div className="flex justify-between text-black text-100 pl-5 border-l-2 border-gray-300">
-                <span>
-                    <span className="pr-3">
+                <span className="flex gap-3">
+                    <span className="">
                         <i className="fa-regular fa-folder"></i>
                     </span>
                     {folder.title}
@@ -60,7 +69,7 @@ const ChatFolder = ({ folder }) => {
             {
                 isOpen && folder.chats.map((chat) => {
                     return (
-                        <Chat key={chat.id} chat={chat} state={[selectedChat, setSelectedChat]} />
+                        <Chat key={chat.id} chat={chat} state={state} />
                     );
                 })
             }
@@ -71,6 +80,7 @@ const ChatFolder = ({ folder }) => {
 
 const Chat = ({ chat, state }) => {
     const [isSelected, setIsSelected] = useState(false);
+    const [isHover, setIsHover] = useState(false);
     const [selectedChat, setSelectedChat] = state;
 
     useEffect(() => {
@@ -82,7 +92,15 @@ const Chat = ({ chat, state }) => {
     }, [selectedChat]);
     
     return (
-        <div className={"w-full flex justify-between gap-3 py-1 pl-7 text-x border-l-2 " + (isSelected ? "border-blue-400" : "border-gray-300")}>
+        <div 
+            className={"w-full flex justify-between gap-3 py-1 pl-7 text-x border-l-2 " + (isSelected ? "border-blue-400" : "border-gray-300")}
+            onMouseEnter={() => setIsHover(true)}
+            onMouseLeave={() => setIsHover(false)}
+            draggable
+            onDragStart={(e) => {
+                e.dataTransfer.setData("id", chat.id);
+            }}
+        >
             <button 
                 type="button"
                 className={"w-full text-left text-100 truncate " + (isSelected ? "text-blue-500 font-normal" : "font-light text-black")}
@@ -91,7 +109,7 @@ const Chat = ({ chat, state }) => {
                 {chat.title}
             </button>
             {
-                isSelected && (
+                isHover && (
                     <div className="flex gap-5 text-blue-500">
                         <button
                             type="button"
@@ -106,7 +124,8 @@ const Chat = ({ chat, state }) => {
 };
 
 const ChatHistory = () => {
-    const folders = [
+    const [selectedChat, setSelectedChat] = useState(null);
+    const [folders, setFolders] = useState([
         {
             id: 1,
             title: "Academia",
@@ -169,16 +188,53 @@ const ChatHistory = () => {
                 },
             ]
         },
-    ];
+    ]);
+
+    const onDropChat = (e, targetFolder) => {
+        e.preventDefault();
+        const id = parseInt(e.dataTransfer.getData("id")); // TODO: remove parseInt
+
+        let chatToMove;
+        const currentFolder = folders.find((folder) => {
+            return folder.chats.find((chat) => {
+                if (chat.id === id) {
+                    chatToMove = {...chat};
+                }
+                return chat.id === id;
+            });
+        });
+
+        if (currentFolder === -1 || currentFolder.id === targetFolder ) {
+            return;
+        }
+        console.log("currentFolder", currentFolder.id);
+        console.log("targetFolder", targetFolder);
+
+        const newFolders = folders.map((folder) => {
+            if (folder.id === currentFolder.id) {
+                folder.chats = folder.chats.filter((chat) => {
+                    return chat.id !== id;
+                });
+            }
+
+            if (folder.id === targetFolder) {
+                folder.chats.push(chatToMove);
+            }
+
+            return folder;
+        });
+
+        setFolders(newFolders);
+    };
 
     return (
-        <div className="w-1/4 min-w-5xl">
+        <div className="w-1/4 min-w-5xl max-h-screen overflow-auto pr-5">
             <ChatHistoryHeader />
             
             {
                 folders.map((folder) => {
                     return (
-                        <ChatFolder key={folder.id} folder={folder} />
+                        <Folder key={folder.id} onDropChat={onDropChat} folder={folder} state={[selectedChat, setSelectedChat]}/>
                     );
                 })
             }
