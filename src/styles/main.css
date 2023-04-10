@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 .mask-gradient {
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0) 100%);
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0) 100%);
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 0) 100%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 0) 100%);
+}
+
+.mask-gradient-reverse {
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 0) 100%);
+    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 0) 100%);
 }
 
 ol {
@@ -89,9 +94,15 @@ ol {
     border-collapse: separate;
     border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
     width: 100%;
-    min-width: 350px;
+    min-width: 300px;
     max-width: max-content;
     margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+    .markdown table {
+        min-width: 400px;
+    }
 }
 
 .markdown th {
