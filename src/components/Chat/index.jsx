@@ -1,51 +1,73 @@
 import { useState } from "react";
 import { Message } from "../Message";
+import formatNumberInK from "../../utils/formatNumberInK";
 
 const ChatHeader = ({ chat }) => {
+    const [isOpen, setIsOpen] = useState(false);
     return (
-        <div className="w-full flex justify-between absolute top-0 py-5">
-            <div className="absolute top-0 w-full h-full z-10 backdrop-blur-sm mask-gradient"></div>
-            <div className="z-20 w-full h-full flex justify-between">
-                <div className="flex items-center">
-                    <div className="ml-3">
-                        <h3 className="text-2xl font-bold">
-                            {chat.title || "New Chat"}
-                            <button
-                                type="button"
-                                className="ml-2 text-blue-500"
-                            >
-                                <i className="fa-regular fa-pen-to-square"></i>
-                            </button>
-                        </h3>
-                        <p className="pt-2">Model: <span className="font-light">{chat.model}</span></p>
-                        <p className="pt-2">Tokens: <span className="font-light">{chat.tokens > 1000 ? `${parseInt(chat.tokens / 1000)}k${parseInt((chat.tokens % 1000) / 100)}` : chat.tokens}</span></p>
+        <div className="w-full fixed md:absolute min-h-[80px] z-10 top-0 left-0 py-7 pl-14 md:pl-0">
+            <div className="absolute top-0 left-0 w-full h-full z-20 backdrop-blur-sm mask-gradient bg-chat_bg_primary_alpha"></div>
+            <div className="relative z-20 w-full h-min flex justify-between items-center gap-2">
+                <h3 className="text-xl font-bold truncate h-min">
+                    {chat.title || "New Chat"}
+                </h3>
+                <button 
+                    type="button"
+                    className="flex flex-col pr-1 md:pr-5 w-10"
+                    onClick={() => setIsOpen(!isOpen)}
+                >
+                    <span className={"text-blue-500 block " + (isOpen ? "" : "rotate-90")}>
+                        <i className="fa-regular fa-chevron-down"></i>
+                    </span>
+                </button>
+            </div>
+            {
+                isOpen && (
+                    <div className="relative z-20 text-gray-600 font-medium">
+                        <p>
+                            Tokens used: {formatNumberInK(chat.tokens) || 0}
+                        </p>
+                        <p>
+                            Model: {chat.model || "---"}
+                        </p>
+                    </div>
+                )
+            }
+        </div>
+    );
+};
+
+const ChatInput = ({ onSubmit }) => {
+    return (
+        <div className="w-full flex justify-between md:absolute bottom-0 left-0 fixed py-3 pt-10 pl-2">
+            <div className="absolute bottom-0 w-full h-full z-10 backdrop-blur-sm mask-gradient-reverse bg-chat_bg_secondary_alpha"></div>
+            <form
+                className="z-20 w-full h-full flex justify-between"
+                onSubmit={onSubmit}
+                >
+                <div className="w-full gap-3 flex items-center">
+                    <div className="w-full">
+                        <textarea
+                            className="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            name="message"
+                            placeholder="Escribe un mensaje..."
+                        >
+                        </textarea>
                     </div>
                 </div>
-                <div className="flex gap-5 pr-5 text-blue-500">
-                    <button
-                        type="button"
-                    >
-                        <i className="fa-regular fa-phone"></i>
-                    </button>
-                    <button
-                        type="button"
-                    >
-                        <i className="fa-regular fa-video"></i>
-                    </button>
-                    <button
-                        type="button"
-                    >
-                        <i className="fa-regular fa-ellipsis-v"></i>
+                <div className="flex gap-5 px-5 text-blue-500">
+                    <button type="submit">
+                        <i className="fa-regular fa-paper-plane"></i>
                     </button>
                 </div>
-            </div>
+            </form>
         </div>
     );
 };
 
 const Chat = () => {
     const [chat, setChat] = useState({
-        title: "Preguntas varias",
+        title: "Muchas preguntas varias de un texto largo",
         model: "gpt3.5",
         tokens: 3150,
         conversation: [
@@ -202,11 +224,17 @@ Esta tabla muestra la tasa de cambio promedio anual entre el euro y el dólar pa
 
     // TODO: load chat history from server
 
+    // TODO: submit message to server
+    const onSubmit = (e) => {
+        e.preventDefault();
+        console.log("submit: ", e.target.message.value);
+    };
+
     return (
-        <div className="w-3/4 h-screen py-7 ml-2 relative">
+        <div className="w-full md:w-3/4 h-screen py-7 pl-2 relative">
             <ChatHeader chat={chat} />
 
-            <div className="w-full py-28 pr-3 flex flex-col gap-5 max-h-full overflow-scroll">
+            <div className="w-full pt-20 pb-[6em] pr-3 flex flex-col gap-5 max-h-full overflow-scroll">
                 {
                     chat.conversation.map((message) => (
                         <Message key={message.id} message={message} />
@@ -214,27 +242,7 @@ Esta tabla muestra la tasa de cambio promedio anual entre el euro y el dólar pa
                 }
             </div>
 
-            <div className="w-full flex absolute bottom-0 left-0 py-5 px-5 bg-white shadow-lg">
-                <div className="flex gap-5">
-                    <button
-                        type="button"
-                    >
-                        <i className="fa-regular fa-smile"></i>
-                    </button>
-                    <button
-                        type="button"
-                    >
-                        <i className="fa-regular fa-paperclip"></i>
-                    </button>
-                </div>
-                <div className="flex-grow">
-                    <input
-                        type="text"
-                        className="w-full h-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
-                        placeholder="Type your message..."
-                    />
-                </div>
-            </div>
+            <ChatInput onSubmit={onSubmit} />
         </div>
     );
 }
